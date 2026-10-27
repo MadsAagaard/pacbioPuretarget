@@ -89,3 +89,12 @@ See IMPLEMENTATION.md (identity checks against PTCP v1 and pureTarget dev, prere
 Nextflow 25.04.8 and 25.10.0 in a sandbox mirroring the server layout (lrsShared v1, an lrsCustomTools checkout, a mock archive with `.pbi` files). Analysis processes stubbed (tools not installed); bookkeeping, the cell inventory, both report collectors and the ptcp-qc process scripts ran for real (ptcp-qc itself faked). Mixed, carrier-only and repeat-only sheets: exit 0, the IMPLEMENTATION.md section 5 checks hold. Fixes from it:
 - repeatModules.nf: the v1 `publishDir {closure}, ...` form cannot see `meta` from Nextflow 25.10.0 on (works up to 25.04.8); now `publishDir path: {closure}, ...`, marked "KG v2". pureTarget dev has the same form.
 - main.nf: the samples summary also lists rows skipped as not PureTarget.
+
+## Repeat sample reports (27 Oct, after the first server run)
+One report per repeat sample, `repeatExpansion/reports/<npn>.repeat.sampleReport.html` (process `ptRepeatReports`,
+lrsCustomTools `pt_repeat_report_collector.py` / `pt_repeat_sample_report_template.html` 261027). QC as the run QC
+report; per TRGT locus a collapsible card (collapsed by default) with the TRGT 5 genotype, TRGT 4 alongside, ptcp-qc
+reads and links to the plots, VCFs and BAMs, relative to `reports/`. Classes only from the thresholds section
+`repeat_classes` (none yet: sizes only). The run QC report links repeat samples to these reports.
+Sandbox (25.04.8 and 25.10.0, mixed sheet): 4 repeat reports, all 49 links per report resolve, also after moving the
+run folder.
