@@ -192,9 +192,10 @@ workflow {
         .map { rows ->
             def miss = missingOf(rows)
             if (miss) log.warn "Sample sheet rows with no matching uBAM: ${miss.collect { "${it.npn} (${it.panel}, ${it.testlist})" }.join(', ')}"
-            ( ["sample\tpanel\ttestlist\tstatus\tubams\ttotal_gb\tcells"]
-              + rows.collect { "${it[0]}\t${it[1]}\t${it[3]}\tanalysed\t${it[8]}\t${it[9]}\t${it[5]}" }
-              + miss.collect { "${it.npn}\t${it.panel}\t${it.testlist}\tno uBAM found\t0\t0.00\t" } ).join('\n')
+            ( ["sample\tpanel\ttestlist\tstatus\tubams\ttotal_gb\tcells"] +
+              rows.collect { "${it[0]}\t${it[1]}\t${it[3]}\tanalysed\t${it[8]}\t${it[9]}\t${it[5]}" } +
+              miss.collect { "${it.npn}\t${it.panel}\t${it.testlist}\tno uBAM found\t0\t0.00\t" } +
+              notPT.collect { "${it.npn}\t-\t${it.testlist}\tskipped: not a PureTarget testlist\t0\t0.00\t" } ).join('\n')
         }
         | pt_samplesSummary
 

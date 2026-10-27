@@ -24,7 +24,7 @@ nextflow.enable.dsl = 2
 
 
 process create_fofn {
-    publishDir {"${params.outBase(meta)}/documents/"}, mode: 'copy',pattern: '*.fofn'
+    publishDir path: {"${params.outBase(meta)}/documents/"}, mode: 'copy',pattern: '*.fofn'  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), path(data) //ubam
@@ -39,7 +39,7 @@ process create_fofn {
 
 process inputFiles_symlinks_ubam{
     label "low"
-    publishDir {"${params.outBase(meta)}/inputSymlinks/"}, mode: 'symlink', pattern: '*.{bam,pbi}'
+    publishDir path: {"${params.outBase(meta)}/inputSymlinks/"}, mode: 'symlink', pattern: '*.{bam,pbi}'  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), path(data)   
@@ -58,7 +58,7 @@ process pbmm2_align_mergedData {
     tag "$meta.id"
     conda "${params.condaEnvs.pbmm2}"
 
-    publishDir {"${params.outBase(meta)}/alignments/"}, mode: 'copy', pattern: '*.{bam,bai}'
+    publishDir path: {"${params.outBase(meta)}/alignments/"}, mode: 'copy', pattern: '*.{bam,bai}'  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), path(fofn)
@@ -85,8 +85,8 @@ process trgt4_pureTarget{
     label "medium"
     conda "${params.condaEnvs.trgt4}"
 
-    publishDir {"${params.outBase(meta)}/TRGT/bam/"}, mode: 'copy', pattern: "*.trgt4.ba*"
-    publishDir {"${params.outBase(meta)}/TRGT/vcf/"}, mode: 'copy', pattern: "*.trgt4.vcf.*"
+    publishDir path: {"${params.outBase(meta)}/TRGT/bam/"}, mode: 'copy', pattern: "*.trgt4.ba*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
+    publishDir path: {"${params.outBase(meta)}/TRGT/vcf/"}, mode: 'copy', pattern: "*.trgt4.vcf.*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
 /*
     publishDir {params.groupedOutput ? "${outputDir}/TRGT/pureTarget/bam" : "${outputDir}/${meta.id}/TRGT/pureTarget/bam/"}, mode: 'copy', pattern: "*.sorted.ba*"
@@ -128,8 +128,8 @@ process trgt5_pureTarget{
     label "medium"
     conda "${params.condaEnvs.trgt5}"
 
-    publishDir {"${params.outBase(meta)}/TRGT5/bam/"}, mode: 'copy', pattern: "*.trgt5.ba*"
-    publishDir {"${params.outBase(meta)}/TRGT5/vcf/"}, mode: 'copy', pattern: "*.trgt5.vcf.*"
+    publishDir path: {"${params.outBase(meta)}/TRGT5/bam/"}, mode: 'copy', pattern: "*.trgt5.ba*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
+    publishDir path: {"${params.outBase(meta)}/TRGT5/vcf/"}, mode: 'copy', pattern: "*.trgt5.vcf.*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
 
     input:
@@ -164,7 +164,7 @@ process trgt4_pureTarget_plots{
     tag "$meta.id"
     label "medium"
     conda "${params.condaEnvs.trgt4}"
-    publishDir {"${params.outBase(meta)}/TRGT/plots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"
+    publishDir path: {"${params.outBase(meta)}/TRGT/plots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), val(data)
@@ -202,7 +202,7 @@ process trgt4_pureTarget_plots_meth{
     label "medium"
     conda "${params.condaEnvs.trgt4}"
 
-    publishDir {"${params.outBase(meta)}/TRGT/methylationPlots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"
+    publishDir path: {"${params.outBase(meta)}/TRGT/methylationPlots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), val(data)
@@ -242,7 +242,7 @@ process trgt5_pureTarget_plots{
     label "medium"
     conda "${params.condaEnvs.trgt5}"
 
-    publishDir {"${params.outBase(meta)}/TRGT5/plots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"
+    publishDir path: {"${params.outBase(meta)}/TRGT5/plots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
 
     input:
@@ -282,7 +282,7 @@ process methylationBW{
     cpus 20
     conda "${params.condaEnvs.pbCPGtools}"
 
-    publishDir {"${params.outBase(meta)}/methylation/BigWigBed/"}, mode: 'copy',  pattern: "*.methylation.{hap1,hap2,combined}.*"
+    publishDir path: {"${params.outBase(meta)}/methylation/BigWigBed/"}, mode: 'copy',  pattern: "*.methylation.{hap1,hap2,combined}.*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
 
     input:
