@@ -98,3 +98,16 @@ reads and links to the plots, VCFs and BAMs, relative to `reports/`. Classes onl
 `repeat_classes` (none yet: sizes only). The run QC report links repeat samples to these reports.
 Sandbox (25.04.8 and 25.10.0, mixed sheet): 4 repeat reports, all 49 links per report resolve, also after moving the
 run folder.
+
+## Repeat ptcp-qc BED from the TRGT catalog (27 Oct)
+The repeat panel's ptcp-qc ran on PacBio's BED (39 repeat panel groups), while TRGT genotypes the STRchive KGVejle
+catalog (76 loci): catalog loci outside the panel had no ptcp-qc read count and showed red NO CALL in the repeat
+reports. Now process `ptRepeatQcBed` builds `repeatExpansion/QC/ptcpQC/ptcp-qc.repeatCatalog.bed` each run from
+`params.trDiseaseCatalog` and PacBio's BED (lrsCustomTools `ptcp/pt_repeat_qc_bed.py`): a group per catalog locus,
+loci within 5 kb in one group (ptcp-qc stops on overlapping groups and would split reads between adjacent ones),
+PacBio's panel rows kept as `panel_` subgroups (panel counts unchanged, panel loci marked), HG rows kept.
+`ptcpQC_repeat` runs on it with `--min-group-coverage 0`; the repeat reports and the run QC report read it.
+The carrier ptcp-qc keeps PacBio's BED. Expected: repeat on-target fraction slightly up where catalog-only loci
+are captured; X/Y ratios marginally different. Validated with ptcp-qc 1.0.0 on synthetic BAMs and in the sandbox
+(25.04.8 + 25.10.0, real catalog): 76/76 loci matched, 39 panel loci, 35 catalog-only loci in the report's
+"not captured" block, run QC matrix 39 columns.

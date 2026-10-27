@@ -73,6 +73,7 @@ process ptRunQcReport {
     path(inventory, stageAs: 'inventory/*')      // <sheet>.cellInventory.json
     val(sampleRows)                              // [[npn, panel, sex M|K, testlist, material, cells, runs, barcodes], ...]
     val(runMeta)
+    path(targetsBed)                             // the repeat ptcp-qc BED (ptRepeatQcBed): repeat loci + panel loci
 
     output:
     path("reports/*.html"), emit: html
@@ -91,7 +92,7 @@ process ptRunQcReport {
     python3 ${scripts}/pt_run_qc_collector.py \
     --carrier-qc-dir carrier_qc \
     --repeat-qc-dir repeat_qc \
-    --targets-bed ${params.ptcpQcBed} \
+    --targets-bed ${targetsBed} \
     --samples samples.tsv \
     --cell-inventory inventory/${params.ssBase}.cellInventory.json \
     --run-meta run_meta.json \

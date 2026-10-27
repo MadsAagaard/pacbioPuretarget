@@ -50,7 +50,8 @@ Options:
 ```
 <root>/pureTargetJoint/<sheet>_<readSet>/
     repeatExpansion/     repeat panel, pureTarget v1 layout (alignments/, TRGT/, TRGT5/, methylation/, ...)
-                         + QC/ptcpQC/ (ptcp-qc for the repeat samples)
+                         + QC/ptcpQC/ (ptcp-qc for the repeat samples, on ptcp-qc.repeatCatalog.bed: a target per
+                           TRGT catalog locus, built each run from params.trDiseaseCatalog)
                          + reports/<npn>.repeat.sampleReport.html (links relative, so the run folder can move)
     carrierPanel/        carrier panel, PTCP v1 layout (alignments/, repeatExpansions/, specialAnalysis/,
                          structuralVariants/, QC/ptcpQC/, reports/ = sample reports + carrier run QC)

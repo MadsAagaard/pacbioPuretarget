@@ -178,7 +178,7 @@ include { PREPROCESS }  from './subworkflows/PREPROCESS.nf'     // carrier: PTCP
 include { PTCP }        from './subworkflows/PTCP.nf'
 include { ptcpReports } from './modules/ptcpModules.nf'
 include { REPEAT }      from './subworkflows/REPEAT.nf'         // repeat: pureTarget v1
-include { ptRepeatReports } from './modules/repeatModules.nf'
+include { ptRepeatQcBed; ptRepeatReports } from './modules/repeatModules.nf'
 include { pt_samplesSummary; pt_cellInventory; ptRunQcReport } from './modules/runModules.nf'
 
 
@@ -205,7 +205,10 @@ workflow {
     PTCP(PREPROCESS.out.alignedFinal)
 
     // ---- repeat expansion panel: pureTarget v1 ----------------------------------------
-    REPEAT(byPanel.repeat)
+    // ptcp-qc targets for the repeat panel, from the TRGT catalog of this run
+    ptRepeatQcBed()
+    repeat_qc_bed = ptRepeatQcBed.out.first()
+    REPEAT(byPanel.repeat, repeat_qc_bed)
 
     // ---- reports ----------------------------------------------------------------------
     if (params.reports) {
@@ -301,7 +304,8 @@ workflow {
             REPEAT.out.trgt4.map { meta, spanBam, spanBai, vcf, tbi -> vcf }.collect().ifEmpty([]),
             REPEAT.out.qcJson.ifEmpty([]),
             REPEAT.out.plotNames.collect(flat: false).ifEmpty([]),
-            repeat_meta_ch)
+            repeat_meta_ch,
+            repeat_qc_bed)
 
         // a panel without samples gives [] (its ptcp-qc never runs)
         ptRunQcReport(
@@ -309,7 +313,8 @@ workflow {
             REPEAT.out.qcJson.ifEmpty([]),
             pt_cellInventory.out.json,
             samples_ch.map { rows -> rows.collect { it.take(8) } },
-            run_meta_ch)
+            run_meta_ch,
+            repeat_qc_bed)
     }
 }
 

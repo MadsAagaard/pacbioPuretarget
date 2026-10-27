@@ -30,6 +30,7 @@ workflow REPEAT {
 
     take:
     finalUbamInput          // tuple(meta, [uBAMs]), meta.panel == 'repeat'
+    qcBed                   // the repeat ptcp-qc targets BED (ptRepeatQcBed)
 
     main:
 
@@ -69,7 +70,7 @@ workflow REPEAT {
         }
         .set { qc_input_ch }
 
-    ptcpQC_repeat(qc_input_ch)
+    ptcpQC_repeat(qc_input_ch, qcBed)
 
     // names of the plots each plot step produced, for the sample reports' links
     // (joint pipeline addition): [file_id, kind, file name]
