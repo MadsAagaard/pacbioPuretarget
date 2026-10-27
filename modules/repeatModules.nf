@@ -309,6 +309,30 @@ process methylationBW{
 // total_reads. Sample name = NPN (one repeat analysis per NPN).
 // Output: <run>/repeatExpansion/QC/ptcpQC/
 
+// Joint-pipeline addition: the repeat panel's ptcp-qc targets BED, built from the
+// TRGT catalog the repeat branch genotypes with (params.trDiseaseCatalog), so every
+// catalog locus has a ptcp-qc read count. Carrier (HG) rows and PacBio's repeat panel
+// rows are kept; nearby loci share one group (ptcp-qc stops on overlapping groups).
+process ptRepeatQcBed {
+    label "low"
+    conda "${params.condaEnvs.ptcp}"     // a known python3 (the script is stdlib only)
+
+    publishDir (
+        path: {"${params.panelOut.repeat}/QC/ptcpQC/"},
+        mode: 'copy')
+
+    output:
+    path("ptcp-qc.repeatCatalog.bed")
+
+    script:
+    """
+    python3 ${params.ptcpKgScripts}/pt_repeat_qc_bed.py \
+    --catalog ${params.trDiseaseCatalog} \
+    --ptcp-bed ${params.ptcpQcBed} \
+    --out ptcp-qc.repeatCatalog.bed
+    """
+}
+
 process ptcpQC_repeat {
     label "intermediate"
     conda "${params.condaEnvs.ptcp}"
@@ -320,6 +344,7 @@ process ptcpQC_repeat {
 
     input:
     tuple val(records), path(files)      // records: [[npn, bamName, baiName], ...]
+    path(targetsBed)                     // ptRepeatQcBed
 
     output:
     path("ptcp_qc/qc.*.json"),                            emit: json
@@ -347,7 +372,8 @@ process ptcpQC_repeat {
 
     ptcp-qc -v analyze \
     --manifest ${manifestName} \
-    --targets-bed ${params.ptcpQcBed} \
+    --targets-bed ${targetsBed} \
+    --min-group-coverage 0 \
     --output-prefix ptcp_qc/qc \
     --threads ${task.cpus} \
     --no-trgt \
@@ -381,6 +407,7 @@ process ptRepeatReports {
     path(qcJson,    stageAs: 'qc/*')                 // qc.<npn>.json + qc.aggregate.json
     val(plotRows)                                    // [[file_id, kind, file name], ...]
     val(runMeta)
+    path(targetsBed)                                 // ptRepeatQcBed: the BED the repeat ptcp-qc ran with
 
     output:
     path("reports/*.html"), emit: html
@@ -411,7 +438,7 @@ PT_EOF
     --trgt5-dir trgt5 \
     --trgt4-dir trgt4 \
     --plots plots.tsv \
-    --targets-bed ${params.ptcpQcBed} \
+    --targets-bed ${targetsBed} \
     --run-meta run_meta.json \
     ${thr} \
     --template ${scripts}/pt_repeat_sample_report_template.html \
