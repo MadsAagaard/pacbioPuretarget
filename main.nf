@@ -178,6 +178,7 @@ include { PREPROCESS }  from './subworkflows/PREPROCESS.nf'     // carrier: PTCP
 include { PTCP }        from './subworkflows/PTCP.nf'
 include { ptcpReports } from './modules/ptcpModules.nf'
 include { REPEAT }      from './subworkflows/REPEAT.nf'         // repeat: pureTarget v1
+include { ptRepeatReports } from './modules/repeatModules.nf'
 include { pt_samplesSummary; pt_cellInventory; ptRunQcReport } from './modules/runModules.nf'
 
 
@@ -192,9 +193,10 @@ workflow {
         .map { rows ->
             def miss = missingOf(rows)
             if (miss) log.warn "Sample sheet rows with no matching uBAM: ${miss.collect { "${it.npn} (${it.panel}, ${it.testlist})" }.join(', ')}"
-            ( ["sample\tpanel\ttestlist\tstatus\tubams\ttotal_gb\tcells"]
-              + rows.collect { "${it[0]}\t${it[1]}\t${it[3]}\tanalysed\t${it[8]}\t${it[9]}\t${it[5]}" }
-              + miss.collect { "${it.npn}\t${it.panel}\t${it.testlist}\tno uBAM found\t0\t0.00\t" } ).join('\n')
+            ( ["sample\tpanel\ttestlist\tstatus\tubams\ttotal_gb\tcells"] +
+              rows.collect { "${it[0]}\t${it[1]}\t${it[3]}\tanalysed\t${it[8]}\t${it[9]}\t${it[5]}" } +
+              miss.collect { "${it.npn}\t${it.panel}\t${it.testlist}\tno uBAM found\t0\t0.00\t" } +
+              notPT.collect { "${it.npn}\t-\t${it.testlist}\tskipped: not a PureTarget testlist\t0\t0.00\t" } ).join('\n')
         }
         | pt_samplesSummary
 
@@ -263,6 +265,43 @@ workflow {
                   missing                  : missingOf(rows).collect { [id: it.npn, panel: it.panel, testlist: it.testlist] } ]
             }
             .set { run_meta_ch }
+
+        // repeat sample reports (repeatExpansion/reports/), one task for all repeat
+        // samples; no repeat samples = no task (the rows channel stays empty)
+        REPEAT.out.trgt5
+            .map { meta, spanBam, spanBai, vcf, tbi -> meta }
+            .collect(flat: false)
+            .map { metas -> [metas] }
+            .combine(samples_ch.map { rows -> [rows] })
+            .map { metas, rows ->
+                def byNpn = rows.findAll { it[1] == 'repeat' }.collectEntries { [(it[0]): it] }
+                metas.sort { it.id }.collect { m -> [ m.npn, m.id, m.sex == 'male' ? 'M' : 'K', m.testlist,
+                                                    byNpn[m.npn] ? byNpn[m.npn][5] : '', byNpn[m.npn] ? byNpn[m.npn][6] : '' ] }   // npn, file_id, sex, testlist, cells, runs
+            }
+            .set { repeat_rows_ch }
+
+        samples_ch
+            .map { rows -> rows.findAll { it[1] == 'repeat' } }
+            .map { rows ->
+                [ samplesheet           : params.ssBase,
+                  runfolder             : rows.collect { it[6].tokenize(',') }.flatten().unique().sort().join(', '),
+                  read_mode             : params.hifiReads ? 'HiFi only' : 'HiFi + fail',
+                  genome_version_tag    : params.genomeVersion,
+                  read_set              : params.readSet,
+                  link_prefix           : '../',
+                  run_qc_report         : "../../reports/${params.ssBase}.pureTarget.runQC.html".toString(),
+                  tools_repeat          : params.repeatToolVersions,
+                  lrscustomtools_release: file(params.lrsCustomToolsBase).name ]
+            }
+            .set { repeat_meta_ch }
+
+        ptRepeatReports(
+            repeat_rows_ch,
+            REPEAT.out.trgt5.map { meta, spanBam, spanBai, vcf, tbi -> vcf }.collect().ifEmpty([]),
+            REPEAT.out.trgt4.map { meta, spanBam, spanBai, vcf, tbi -> vcf }.collect().ifEmpty([]),
+            REPEAT.out.qcJson.ifEmpty([]),
+            REPEAT.out.plotNames.collect(flat: false).ifEmpty([]),
+            repeat_meta_ch)
 
         // a panel without samples gives [] (its ptcp-qc never runs)
         ptRunQcReport(

@@ -24,7 +24,7 @@ nextflow.enable.dsl = 2
 
 
 process create_fofn {
-    publishDir {"${params.outBase(meta)}/documents/"}, mode: 'copy',pattern: '*.fofn'
+    publishDir path: {"${params.outBase(meta)}/documents/"}, mode: 'copy',pattern: '*.fofn'  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), path(data) //ubam
@@ -39,7 +39,7 @@ process create_fofn {
 
 process inputFiles_symlinks_ubam{
     label "low"
-    publishDir {"${params.outBase(meta)}/inputSymlinks/"}, mode: 'symlink', pattern: '*.{bam,pbi}'
+    publishDir path: {"${params.outBase(meta)}/inputSymlinks/"}, mode: 'symlink', pattern: '*.{bam,pbi}'  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), path(data)   
@@ -58,7 +58,7 @@ process pbmm2_align_mergedData {
     tag "$meta.id"
     conda "${params.condaEnvs.pbmm2}"
 
-    publishDir {"${params.outBase(meta)}/alignments/"}, mode: 'copy', pattern: '*.{bam,bai}'
+    publishDir path: {"${params.outBase(meta)}/alignments/"}, mode: 'copy', pattern: '*.{bam,bai}'  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), path(fofn)
@@ -85,8 +85,8 @@ process trgt4_pureTarget{
     label "medium"
     conda "${params.condaEnvs.trgt4}"
 
-    publishDir {"${params.outBase(meta)}/TRGT/bam/"}, mode: 'copy', pattern: "*.trgt4.ba*"
-    publishDir {"${params.outBase(meta)}/TRGT/vcf/"}, mode: 'copy', pattern: "*.trgt4.vcf.*"
+    publishDir path: {"${params.outBase(meta)}/TRGT/bam/"}, mode: 'copy', pattern: "*.trgt4.ba*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
+    publishDir path: {"${params.outBase(meta)}/TRGT/vcf/"}, mode: 'copy', pattern: "*.trgt4.vcf.*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
 /*
     publishDir {params.groupedOutput ? "${outputDir}/TRGT/pureTarget/bam" : "${outputDir}/${meta.id}/TRGT/pureTarget/bam/"}, mode: 'copy', pattern: "*.sorted.ba*"
@@ -128,8 +128,8 @@ process trgt5_pureTarget{
     label "medium"
     conda "${params.condaEnvs.trgt5}"
 
-    publishDir {"${params.outBase(meta)}/TRGT5/bam/"}, mode: 'copy', pattern: "*.trgt5.ba*"
-    publishDir {"${params.outBase(meta)}/TRGT5/vcf/"}, mode: 'copy', pattern: "*.trgt5.vcf.*"
+    publishDir path: {"${params.outBase(meta)}/TRGT5/bam/"}, mode: 'copy', pattern: "*.trgt5.ba*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
+    publishDir path: {"${params.outBase(meta)}/TRGT5/vcf/"}, mode: 'copy', pattern: "*.trgt5.vcf.*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
 
     input:
@@ -164,7 +164,7 @@ process trgt4_pureTarget_plots{
     tag "$meta.id"
     label "medium"
     conda "${params.condaEnvs.trgt4}"
-    publishDir {"${params.outBase(meta)}/TRGT/plots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"
+    publishDir path: {"${params.outBase(meta)}/TRGT/plots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), val(data)
@@ -202,7 +202,7 @@ process trgt4_pureTarget_plots_meth{
     label "medium"
     conda "${params.condaEnvs.trgt4}"
 
-    publishDir {"${params.outBase(meta)}/TRGT/methylationPlots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"
+    publishDir path: {"${params.outBase(meta)}/TRGT/methylationPlots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
     input:
     tuple val(meta), val(data)
@@ -242,7 +242,7 @@ process trgt5_pureTarget_plots{
     label "medium"
     conda "${params.condaEnvs.trgt5}"
 
-    publishDir {"${params.outBase(meta)}/TRGT5/plots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"
+    publishDir path: {"${params.outBase(meta)}/TRGT5/plots/${meta.id}/"}, mode: 'copy',  pattern: "*.{pdf,png,svg}"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
 
     input:
@@ -282,7 +282,7 @@ process methylationBW{
     cpus 20
     conda "${params.condaEnvs.pbCPGtools}"
 
-    publishDir {"${params.outBase(meta)}/methylation/BigWigBed/"}, mode: 'copy',  pattern: "*.methylation.{hap1,hap2,combined}.*"
+    publishDir path: {"${params.outBase(meta)}/methylation/BigWigBed/"}, mode: 'copy',  pattern: "*.methylation.{hap1,hap2,combined}.*"  // KG v2: named path, Nextflow >= 25.10 does not resolve meta in a positional closure
 
 
     input:
@@ -356,5 +356,65 @@ process ptcpQC_repeat {
 
     python3 ${params.ptcpScripts}/ptcpqc_json_to_csv.py --inputs ptcp_qc/qc*.json \
     -o ptcp_qc/qc.csv
+    """
+}
+
+
+// Joint-pipeline addition: one report per repeat sample (repeatExpansion/reports/),
+// built by lrsCustomTools summaryScripts/ptcp/pt_repeat_report_collector.py.
+// TRGT 5 genotype per locus (TRGT 4 alongside), the sample's own ptcp-qc QC, and
+// links to its plots / VCFs / BAMs relative to reports/. Plot links come from the
+// plot names the plot steps actually produced (a failed plot is not linked).
+process ptRepeatReports {
+    label "low"
+    conda "${params.condaEnvs.ptcp}"
+
+    publishDir (
+        path: {"${params.panelOut.repeat}/reports/"},
+        mode: 'copy',
+        saveAs: { fn -> file(fn).name })
+
+    input:
+    val(sampleRows)                                  // [[npn, file_id, sex M|K, testlist, cells, runs], ...]
+    path(trgt5Vcfs, stageAs: 'trgt5/*')
+    path(trgt4Vcfs, stageAs: 'trgt4/*')
+    path(qcJson,    stageAs: 'qc/*')                 // qc.<npn>.json + qc.aggregate.json
+    val(plotRows)                                    // [[file_id, kind, file name], ...]
+    val(runMeta)
+
+    output:
+    path("reports/*.html"), emit: html
+    path("reports/*.json"), emit: json
+
+    script:
+    def tsv      = (["id\tfile_id\tsex\ttestlist\tcells\truns"] + sampleRows.collect { it.collect { v -> v ?: '' }.join('\t') }).join('\n')
+    def plots    = (["file_id\tkind\tfile"] + plotRows.collect { it.join('\t') }).join('\n')
+    def metaJson = groovy.json.JsonOutput.toJson(runMeta)
+    def thr      = params.ptcpReportThresholds ? "--thresholds ${params.ptcpReportThresholds}" : ""
+    def scripts  = params.ptcpReportScripts
+    // quoted heredocs: no shell expansion, and no 128 kB limit on a single argument
+    // (the plot list has ~150 names per sample)
+    """
+    cat > samples.tsv <<'PT_EOF'
+${tsv}
+PT_EOF
+    cat > plots.tsv <<'PT_EOF'
+${plots}
+PT_EOF
+    cat > run_meta.json <<'PT_EOF'
+${metaJson}
+PT_EOF
+
+    python3 ${scripts}/pt_repeat_report_collector.py \
+    --samples samples.tsv \
+    --qc-dir qc \
+    --trgt5-dir trgt5 \
+    --trgt4-dir trgt4 \
+    --plots plots.tsv \
+    --targets-bed ${params.ptcpQcBed} \
+    --run-meta run_meta.json \
+    ${thr} \
+    --template ${scripts}/pt_repeat_sample_report_template.html \
+    --outdir reports
     """
 }

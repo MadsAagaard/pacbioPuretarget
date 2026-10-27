@@ -8,7 +8,9 @@ expansion panel and carrier panel (PTCP) samples, usually on the same SMRT Cells
   (`conf/pureTarget.config`). Other testlists are skipped. A sample takes every uBAM with its
   NPN and a testlist of its panel, from any run (resequenced samples get all their data).
 - **Repeat panel**: the pureTarget v1 analysis, unchanged (pbmm2 on HiFi + fail,
-  TRGT 4 + 5 with the STRchive KGVejle catalog, plots, methylation).
+  TRGT 4 + 5 with the STRchive KGVejle catalog, plots, methylation), plus a sample
+  report per repeat sample (TRGT 5 genotype per locus with TRGT 4 alongside, collapsible
+  locus cards, links to the plots).
 - **Carrier panel**: the PTCP v1 analysis, unchanged (PacBio PTCP 3.2.1 commands,
   KG Vejle read setup; Paraphase, F8 inversion, Sawfish HBA, TRGT 5.1, ptcp-qc,
   carrier sample reports).
@@ -49,6 +51,7 @@ Options:
 <root>/pureTargetJoint/<sheet>_<readSet>/
     repeatExpansion/     repeat panel, pureTarget v1 layout (alignments/, TRGT/, TRGT5/, methylation/, ...)
                          + QC/ptcpQC/ (ptcp-qc for the repeat samples)
+                         + reports/<npn>.repeat.sampleReport.html (links relative, so the run folder can move)
     carrierPanel/        carrier panel, PTCP v1 layout (alignments/, repeatExpansions/, specialAnalysis/,
                          structuralVariants/, QC/ptcpQC/, reports/ = sample reports + carrier run QC)
     QC/cellInventory/    every uBAM of each SMRT Cell: barcode, testlist, reads, bases

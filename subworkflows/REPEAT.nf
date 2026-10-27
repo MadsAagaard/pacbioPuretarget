@@ -71,7 +71,17 @@ workflow REPEAT {
 
     ptcpQC_repeat(qc_input_ch)
 
+    // names of the plots each plot step produced, for the sample reports' links
+    // (joint pipeline addition): [file_id, kind, file name]
+    trgt4_pureTarget_plots.out.map { meta, f -> [meta.id, 'trgt4', f] }
+        .mix(trgt5_pureTarget_plots.out.map { meta, f -> [meta.id, 'trgt5', f] },
+             trgt4_pureTarget_plots_meth.out.map { meta, f -> [meta.id, 'trgt4_meth', f] })
+        .flatMap { id, kind, f -> (f instanceof List ? f : [f]).collect { p -> [id, kind, p.name] } }
+        .set { plot_names_ch }
+
     emit:
-    trgt5   = trgt5_pureTarget.out.trgt_full      // tuple(meta, spanBam, spanBai, vcf.gz, tbi)
-    qcJson  = ptcpQC_repeat.out.json              // qc.<npn>.json + qc.aggregate.json (one list)
+    trgt5     = trgt5_pureTarget.out.trgt_full    // tuple(meta, spanBam, spanBai, vcf.gz, tbi)
+    trgt4     = trgt4_pureTarget.out.trgt_full    // tuple(meta, spanBam, spanBai, vcf.gz, tbi)
+    qcJson    = ptcpQC_repeat.out.json            // qc.<npn>.json + qc.aggregate.json (one list)
+    plotNames = plot_names_ch                     // [file_id, kind, file name]
 }
